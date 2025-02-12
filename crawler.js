@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer-core')
 const { executablePath } = require('puppeteer')
 
-const URL = 'https://vk.com/im/convo/248812621?cmid=510&entrypoint=list_all'
+const URL = 'https://vk.com/im/convo/248812621?entrypoint=list_all'
 
 async function crawl() {
   try {
@@ -18,21 +18,37 @@ async function crawl() {
     const page = await browser.newPage()
     await page.goto(URL, { waitUntil: 'load' })
 
-    await page.waitForSelector('.ConvoMessageWithoutBubble', { visible: true });
-    await page.$$eval('.ConvoMessageWithoutBubble', messages => 
-      messages
-        .map(message => {
-            const link = message.querySelector('a.ConvoMessageWithoutBubble__avatar')
-            if (link?.href === 'https://vk.com/id339740727') {
-              message.click()
-              return message.textContent
-            }
-        })
-    )
+    await new Promise(resolve => setTimeout(resolve, 5000))
+    await page.waitForSelector('.ConvoHistory__messageBlock', { visible: true })
+    const allMessages = await page.$$('.ConvoHistory__messageBlock')
+    const messages = allMessages.slice(Math.max(allMessages.length - 20, 0))
+
+    for (let index = 0; index < messages.length; index++) {
+      const message = messages[index]
+
+      const link = await message.$('a')
+      if (link) {
+        const href = await link.evaluate(element => element.href)
+        if (href === 'https://vk.com/id339740727') {
+          await message.click()
+        }
+      }
+
+      if (index > 0) {
+        const previousMessage = messages[index - 1]
+        const isPreviousMessageSelected = await previousMessage.evaluate(element =>
+          element.classList.contains('ConvoHistory__messageBlockSelected--withoutBubbles')
+        )
+
+
+        if (isPreviousMessageSelected) {
+          await message.click()
+        }
+      }
+    }
 
     await page.waitForSelector('.ComposerSelecting__action', { visible: true })
     const dropdownButtons = await page.$$('.ComposerSelecting__action')
-    console.log("Number of .ComposerSelecting__action elements:", dropdownButtons.length)
 
     if (dropdownButtons.length > 1) {
       await dropdownButtons[1].hover()
@@ -53,9 +69,6 @@ async function crawl() {
   } catch (error) {
     console.error(error)
   }
-  //} finally {
-  //  browser?.close()
-  //}
 }
 
 crawl()
