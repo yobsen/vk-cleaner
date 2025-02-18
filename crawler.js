@@ -60,11 +60,21 @@ async function crawl() {
         await deleteButtons[1].click()
       }
 
-      await page.waitForSelector('.vkuiAlert__button.vkuiButton.vkuiButton--size-m.vkuiButton--mode-tertiary', { visible: true })
-      const modalButtons = await page.$$('.vkuiAlert__button.vkuiButton.vkuiButton--size-m.vkuiButton--mode-tertiary')
-      if (modalButtons.length > 1) {
-        await modalButtons[1].click()
+      const checkbox = await page.$('input.vkuiCheckboxInput__input')
+
+      if (checkbox) {
+        const isChecked = await checkbox.evaluate(element => element.checked)
+        if (!isChecked) {
+          await checkbox.click()
+          console.log("Checkbox was unchecked. Clicked to check it.")
+        }
       }
+
+      //await page.waitForSelector('.vkuiAlert__button.vkuiButton.vkuiButton--size-m.vkuiButton--mode-tertiary', { visible: true })
+      //const modalButtons = await page.$$('.vkuiAlert__button.vkuiButton.vkuiButton--size-m.vkuiButton--mode-tertiary')
+      //if (modalButtons.length > 1) {
+      //  await modalButtons[1].click()
+      //}
     }
   } catch (error) {
     console.error(error)
