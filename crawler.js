@@ -3,6 +3,11 @@ const { executablePath } = require('puppeteer')
 
 const URL = 'https://vk.com/im/convo/248812621?entrypoint=list_all'
 
+async function randomDelay(min, max) {
+  const delay = Math.floor(Math.random() * (max - min + 1)) + min
+  return new Promise(resolve => setTimeout(resolve, delay))
+}
+
 async function crawl() {
   try {
     const browser = await puppeteer.launch({
@@ -30,6 +35,7 @@ async function crawl() {
       if (link) {
         const href = await link.evaluate(element => element.href)
         if (href === 'https://vk.com/id339740727') {
+          await randomDelay(1000, 5000)
           await message.click()
         }
       }
@@ -42,6 +48,7 @@ async function crawl() {
 
 
         if (isPreviousMessageSelected) {
+          await randomDelay(1000, 5000)
           await message.click()
         }
       }
@@ -66,15 +73,14 @@ async function crawl() {
         const isChecked = await checkbox.evaluate(element => element.checked)
         if (!isChecked) {
           await checkbox.click()
-          console.log("Checkbox was unchecked. Clicked to check it.")
         }
       }
 
-      //await page.waitForSelector('.vkuiAlert__button.vkuiButton.vkuiButton--size-m.vkuiButton--mode-tertiary', { visible: true })
-      //const modalButtons = await page.$$('.vkuiAlert__button.vkuiButton.vkuiButton--size-m.vkuiButton--mode-tertiary')
-      //if (modalButtons.length > 1) {
-      //  await modalButtons[1].click()
-      //}
+      await page.waitForSelector('.vkuiAlert__button.vkuiButton.vkuiButton--size-m.vkuiButton--mode-tertiary', { visible: true })
+      const modalButtons = await page.$$('.vkuiAlert__button.vkuiButton.vkuiButton--size-m.vkuiButton--mode-tertiary')
+      if (modalButtons.length > 1) {
+        await modalButtons[1].click()
+      }
     }
   } catch (error) {
     console.error(error)
